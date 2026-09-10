@@ -852,7 +852,6 @@ class TensorNameMap:
             "backbone.layers.{bid}.mixer.dt_proj",      # mamba
             "model.layers.{bid}.mamba.dt_proj",         # jamba falcon-h1 granite-hybrid
             "model.layers.{bid}.mamba.dt_bias",         # zamba2
-            "model.layers.{bid}.mamba_decoder.mamba.dt", # zamba2
             "model.layers.{bid}.mamba_decoder.mamba.dt_bias", # zamba2
             "model.layers.layers.{bid}.mixer.dt_proj",  # plamo2
             "model.layers.{bid}.linear_attn.dt_proj",   # qwen3next
