@@ -24,6 +24,13 @@ class Zamba2Model(TextModel):
             with open(dir_model / "config.json", "r", encoding="utf-8") as f:
                 hparams = json.load(f)
         super().__init__(dir_model, *args, hparams=hparams, **kwargs)
+        self.d_model  = self.find_hparam(["hidden_size", "d_model"])
+        self.d_conv   = self.find_hparam(["mamba_d_conv", "conv_kernel", "d_conv"], optional=True) or 4
+        self.d_state  = self.find_hparam(["mamba_d_state", "state_size", "d_state"], optional=True) or 128
+        self.expand   = self.find_hparam(["mamba_expand"], optional=True) or 2
+        self.d_inner  = self.expand * self.d_model
+        self.head_dim = self.find_hparam(["mamba_headdim", "mamba_d_head"], optional=True) or 64
+        self.n_group  = self.find_hparam(["mamba_ngroups", "n_groups"], optional=True) or 1
 
     def set_vocab(self):
         if (self.dir_model / "tokenizer.model").is_file():
@@ -38,14 +45,6 @@ class Zamba2Model(TextModel):
     
     
     def set_gguf_parameters(self):
-        d_model  = self.find_hparam(["hidden_size", "d_model"])
-        d_conv   = self.find_hparam(["mamba_d_conv", "conv_kernel", "d_conv"], optional=True) or 4
-        d_state  = self.find_hparam(["mamba_d_state", "state_size", "d_state"], optional=True) or 128
-        expand   = self.find_hparam(["mamba_expand"], optional=True) or 2
-        d_inner  = expand * d_model
-        head_dim = self.find_hparam(["mamba_headdim", "mamba_d_head"], optional=True) or 64
-        n_group  = self.find_hparam(["mamba_ngroups", "n_groups"], optional=True) or 1
-
         rms_norm_eps = self.find_hparam(["rms_norm_eps", "layer_norm_epsilon"], optional=True) or 1e-5
 
         n_head    = self.find_hparam(["num_attention_heads"])
@@ -63,24 +62,49 @@ class Zamba2Model(TextModel):
 
         self.gguf_writer.add_block_count(self.block_count)
         self.gguf_writer.add_context_length(max_seq_len)
-        self.gguf_writer.add_embedding_length(d_model)
+        self.gguf_writer.add_embedding_length(self.d_model)
         self.gguf_writer.add_feed_forward_length(ffn_length)
         self.gguf_writer.add_head_count(n_head)
         self.gguf_writer.add_head_count_kv(n_kv_vec)
         self.gguf_writer.add_key_length(attn_head_dim)
         self.gguf_writer.add_value_length(attn_head_dim)
-        self.gguf_writer.add_ssm_conv_kernel(d_conv)
-        self.gguf_writer.add_ssm_inner_size(d_inner)
-        self.gguf_writer.add_ssm_state_size(d_state)
-        self.gguf_writer.add_ssm_time_step_rank(d_inner // head_dim)
-        self.gguf_writer.add_ssm_group_count(n_group)
+        self.gguf_writer.add_ssm_conv_kernel(self.d_conv)
+        self.gguf_writer.add_ssm_inner_size(self.d_inner)
+        self.gguf_writer.add_ssm_state_size(self.d_state)
+        self.gguf_writer.add_ssm_time_step_rank(self.d_inner // self.head_dim)
+        self.gguf_writer.add_ssm_group_count(self.n_group)
         self.gguf_writer.add_layer_norm_rms_eps(rms_norm_eps)
         self.gguf_writer.add_rope_freq_base(self.find_hparam(["rope_theta"], optional=True) or 10000.0)
         self.gguf_writer.add_file_type(self.ftype)
 
-    @classmethod
-    def filter_tensors(cls, item: tuple[str, Callable[[], Tensor]]) -> tuple[str, Callable[[], Tensor]] | None:
-        pass
+    _experts: list[dict[str, Tensor]] | None = None
 
     def modify_tensors(self, data_torch: Tensor, name: str, bid: int | None) -> Iterable[tuple[str, Tensor]]:
-        pass
+        new_name = self.map_tensor_name(name)
+
+        if self.match_model_tensor_name(new_name, gguf.MODEL_TENSOR.SSM_CONV1D, bid):
+            data_torch = data_torch.squeeze()
+        elif any(self.match_model_tensor_name(new_name, t, bid, suffix="") for t in [
+            gguf.MODEL_TENSOR.SSM_A,
+            gguf.MODEL_TENSOR.SSM_D,
+        ]):
+            data_torch = data_torch.reshape((*data_torch.shape, 1))
+        elif self.match_model_tensor_name(new_name, gguf.MODEL_TENSOR.SSM_NORM, bid):
+            data_torch = data_torch.reshape((self.n_group, self.d_inner // self.n_group))
+        elif name.endswith(".A_log"):
+            logger.debug("A_log --> A ==> " + new_name)
+            data_torch = -torch.exp(data_torch)
+        else:
+            yield from super().modify_tensors(data_torch, name, bid)
+            return
+        
+        yield (new_name, data_torch)
+
+    def prepare_tensors(self):
+        super().prepare_tensors()
+
+        if self._experts is not None:
+            # flatten `list[dict[str, Tensor]]` into `list[str]`
+            experts = [k for d in self._experts for k in d.keys()]
+            if len(experts) > 0:
+                raise ValueError(f"Unprocessed experts: {experts}")
