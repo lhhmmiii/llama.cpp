@@ -216,7 +216,6 @@ class TensorNameMap:
             "layers.{bid}.input_layernorm",                         # qwen3-embedding
             "model.layers.{bid}.attention_layernorm",               # apertus
             "model.layers.{bid}.pre_attention_layernorm",           # kormo
-            "model.layers.{bid}.mamba_decoder.input_layernorm",     # zamba2
             "model.layers.{bid}.shared_transformer.input_layernorm", # zamba2
         ),
 
@@ -401,7 +400,31 @@ class TensorNameMap:
             "model.layers.{bid}.self_attn.output_gate",  # minimax-01
             "model.layers.{bid}.self_attn.linear_gate",  # hy-v4
         ),
+        
+        MODEL_TENSOR.ATTN_Q_ADAPTER_A: (
+            "model.layers.5.shared_transformer.self_attn.linear_q_adapter_list.{bid}.0", # zamba2
+        ),
 
+        MODEL_TENSOR.ATTN_Q_ADAPTER_B: (
+            "model.layers.5.shared_transformer.self_attn.linear_q_adapter_list.{bid}.1", # zamba2
+        ),
+        
+        MODEL_TENSOR.ATTN_K_ADAPTER_A: (
+            "model.layers.5.shared_transformer.self_attn.linear_k_adapter_list.{bid}.0", # zamba2
+        ),
+
+        MODEL_TENSOR.ATTN_K_ADAPTER_B: (
+            "model.layers.5.shared_transformer.self_attn.linear_k_adapter_list.{bid}.1", # zamba2
+        ),
+
+        MODEL_TENSOR.ATTN_V_ADAPTER_A: (
+            "model.layers.5.shared_transformer.self_attn.linear_v_adapter_list.{bid}.0", # zamba2
+        ),
+
+        MODEL_TENSOR.ATTN_V_ADAPTER_B: (
+            "model.layers.5.shared_transformer.self_attn.linear_v_adapter_list.{bid}.1", # zamba2
+        ),
+                
         # Feed-forward norm
         MODEL_TENSOR.FFN_NORM: (
             "gpt_neox.layers.{bid}.post_attention_layernorm",                # gptneox
@@ -541,6 +564,14 @@ class TensorNameMap:
             "model.layers.{bid}.mlp.language_mlp.up_proj",            # cogvlm
             "model.blocks.{bid}.mlp.mlp_linear",                      # talkie
             "model.layers.{bid}.shared_transformer.feed_forward.gate_up_proj", # zamba2
+        ),
+
+        MODEL_TENSOR.FFN_ADAPTER_A: (
+            "model.layers.5.shared_transformer.feed_forward.gate_up_proj_adapter_list.{bid}.0", # zamba2
+        ),
+        
+        MODEL_TENSOR.FFN_ADAPTER_B: (
+            "model.layers.5.shared_transformer.feed_forward.gate_up_proj_adapter_list.{bid}.1", # zamba2
         ),
 
         MODEL_TENSOR.FFN_UP_EXP: (
@@ -1192,6 +1223,7 @@ class TensorNameMap:
 
         MODEL_TENSOR.DEC_ATTN_NORM: (
             "decoder.block.{bid}.layer.0.layer_norm", # t5
+            "model.layers.{bid}.mamba_decoder.input_layernorm",     # zamba2
         ),
 
         MODEL_TENSOR.DEC_ATTN_Q: (
