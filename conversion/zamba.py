@@ -49,10 +49,10 @@ class Zamba2Model(TextModel):
 
         n_head    = self.find_hparam(["num_attention_heads"])
         n_head_kv = self.find_hparam(["num_key_value_heads"], optional=True) or n_head
-        attn_head_dim = self.find_hparam(["attention_head_dim"], optional=True) or (d_model // n_head)
+        attn_head_dim = self.find_hparam(["attention_head_dim"], optional=True) or (self.d_model // n_head)
 
         max_seq_len = self.find_hparam(["max_position_embeddings"], optional=True) or 4096
-        ffn_length = self.find_hparam(["ffn_hidden_size", "intermediate_size"], optional=True) or 4 * d_model
+        ffn_length = self.find_hparam(["ffn_hidden_size", "intermediate_size"], optional=True) or 4 * self.d_model
 
         layers_block_type = self.hparams.get("layers_block_type", [])
         n_kv_vec = [
