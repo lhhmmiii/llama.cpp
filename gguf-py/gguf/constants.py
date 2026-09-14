@@ -679,6 +679,12 @@ class MODEL_TENSOR(IntEnum):
     ATTN_POST_NORM       = auto()
     ATTN_ROT_EMBD        = auto()
     ATTN_SINKS           = auto()
+    ATTN_Q_ADAPTER_A = auto()
+    ATTN_Q_ADAPTER_B = auto()
+    ATTN_K_ADAPTER_A = auto()
+    ATTN_K_ADAPTER_B = auto()
+    ATTN_V_ADAPTER_A = auto()
+    ATTN_V_ADAPTER_B = auto()
     ATTN_GATE            = auto()
     FFN_GATE_INP         = auto()
     FFN_GATE_INP_SHEXP   = auto()
@@ -691,6 +697,8 @@ class MODEL_TENSOR(IntEnum):
     FFN_GATE             = auto()
     FFN_DOWN             = auto()
     FFN_UP               = auto()
+    FFN_ADAPTER_A        = auto()
+    FFN_ADAPTER_B        = auto()
     FFN_ACT              = auto()
     FFN_NORM_EXP         = auto()
     FFN_GATE_EXP         = auto()
@@ -1437,6 +1445,12 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.ATTN_OUT_NORM:             "blk.{bid}.attn_output_norm",
     MODEL_TENSOR.ATTN_POST_NORM:            "blk.{bid}.post_attention_norm",
     MODEL_TENSOR.FFN_GATE_INP:              "blk.{bid}.ffn_gate_inp",
+    MODEL_TENSOR.ATTN_Q_ADAPTER_A:            "blk.{bid}.attn_q_adapter_a",
+    MODEL_TENSOR.ATTN_K_ADAPTER_A:            "blk.{bid}.attn_k_adapter_a",
+    MODEL_TENSOR.ATTN_V_ADAPTER_A:            "blk.{bid}.attn_v_adapter_a",
+    MODEL_TENSOR.ATTN_Q_ADAPTER_B:            "blk.{bid}.attn_q_adapter_b",
+    MODEL_TENSOR.ATTN_K_ADAPTER_B:            "blk.{bid}.attn_k_adapter_b",
+    MODEL_TENSOR.ATTN_V_ADAPTER_B:            "blk.{bid}.attn_v_adapter_b",
     MODEL_TENSOR.FFN_GATE_INP_SHEXP:        "blk.{bid}.ffn_gate_inp_shexp",
     MODEL_TENSOR.FFN_NORM:                  "blk.{bid}.ffn_norm",
     MODEL_TENSOR.FFN_PRE_NORM:              "blk.{bid}.ffn_norm",
@@ -1447,6 +1461,8 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.FFN_GATE:                  "blk.{bid}.ffn_gate",
     MODEL_TENSOR.FFN_DOWN:                  "blk.{bid}.ffn_down",
     MODEL_TENSOR.FFN_UP:                    "blk.{bid}.ffn_up",
+    MODEL_TENSOR.FFN_ADAPTER_A:              "blk.{bid}.ffn_adapter_a",
+    MODEL_TENSOR.FFN_ADAPTER_B:              "blk.{bid}.ffn_adapter_b",
     MODEL_TENSOR.FFN_GATE_SHEXP:            "blk.{bid}.ffn_gate_shexp",
     MODEL_TENSOR.FFN_DOWN_SHEXP:            "blk.{bid}.ffn_down_shexp",
     MODEL_TENSOR.FFN_UP_SHEXP:              "blk.{bid}.ffn_up_shexp",
@@ -5537,6 +5553,7 @@ MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
         MODEL_TENSOR.OUTPUT,
         MODEL_TENSOR.ATTN_NORM,
         MODEL_TENSOR.ATTN_NORM_2,
+        MODEL_TENSOR.DEC_ATTN_NORM,
         MODEL_TENSOR.SSM_IN,
         MODEL_TENSOR.SSM_CONV1D,
         MODEL_TENSOR.SSM_DT,
@@ -5553,6 +5570,14 @@ MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
         MODEL_TENSOR.FFN_UP,
         MODEL_TENSOR.FFN_NORM,
         MODEL_TENSOR.PER_LAYER_PROJ,
+        MODEL_TENSOR.ATTN_Q_ADAPTER_A,
+        MODEL_TENSOR.ATTN_Q_ADAPTER_B,
+        MODEL_TENSOR.ATTN_K_ADAPTER_A,
+        MODEL_TENSOR.ATTN_K_ADAPTER_B,
+        MODEL_TENSOR.ATTN_V_ADAPTER_A,
+        MODEL_TENSOR.ATTN_V_ADAPTER_B,
+        MODEL_TENSOR.FFN_ADAPTER_A,
+        MODEL_TENSOR.FFN_ADAPTER_B,
     ],
 }
 
